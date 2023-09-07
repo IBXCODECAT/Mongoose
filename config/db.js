@@ -1,7 +1,11 @@
-
-const uri = "mongodb+srv://schmitn4:v7HASjSsxELkpgBm@cluster0.hbr5tnv.mongodb.net/?retryWrites=true&w=majority";
-
+import dotenv from 'dotenv';
 import mongoose from "mongoose";
+
+// Load env vars
+dotenv.config();
+
+// Load Secrets from .env file
+const uri = process.env.MONGO_URI;
 
 async function connectDB() {
   try {
