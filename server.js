@@ -39,7 +39,7 @@ app.post(
         if(!errors.isEmpty()) {
             return res.status(422).json({ errors: errors.array() });
         } else {
-            return res.status(201).send(req.body);
+            return res.status(201).send(req.body)   ;
         }
     }
 );
