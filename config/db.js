@@ -19,9 +19,9 @@ async function connectDB() {
     console.log(err);
   }
   finally {
-    mongoose.connection.close();
+    //mongoose.connection.close();
   }
 
-}
+} 
 
 export default connectDB;
