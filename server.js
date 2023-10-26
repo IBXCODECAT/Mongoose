@@ -3,8 +3,9 @@ import connectDB from './config/db';
 import { check, validationResult } from 'express-validator';
 import cors from 'cors';
 import bcrypt from 'bcrypt';
-
+import auth from './middleware/auth';
 import User from './models/User';
+import jwt from 'jwt';
 
 //Initialize Express Application
 const app = express();
@@ -26,12 +27,70 @@ app.get('/', (req, res) => {
     res.send('Hello World!');
 });
 
+app.get('/api/auth', auth, async(req, res) => {
+    try
+    {
+        const user = await User.findById(req.user.id);
+        res.status(200).json(user);
+    }
+    catch(error)
+    {
+        res.status(500).send('Server Error');
+    }
+});
+
+app.post('/api/login', check('email').isEmail(), check('password').exists(), async(req, res) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()) {
+        return res.status(422).json({errors: errors.array()});
+    } else {
+        const {email, password} = req.body;
+        try
+        {
+            let user = await User.findOne({email: email});
+            if(!user) {
+                return res.status(400).json({errors: [{msg: 'Invalid Credentials'}]});
+            }
+
+            const match = bcrypt.compare(password, user.password);
+
+            if(!match) {
+                return res.status(400).json({errors: [{msg: 'Invalid Credentials'}]});
+            }
+
+            returnToken(user, res);
+        }
+        catch(err)
+        {
+            res.status(500).send('Server Error');
+        }
+    }
+});
+
+const returnToken = (user, res) => {
+    const payload = {
+        user: {
+            id: user.id
+        }
+    }
+
+        jwt.sign(
+            payload,
+            process.env.JWT_SECRET,
+            { expiresIn: '10hr' },
+            (err, token) => {
+                if(err) throw err;
+                res.json({token: token});
+            }
+        )
+    }
+
 /**
  * @route POST api/users
  * @desc Register user
  */
 app.post(
-    '/api/users',
+    '/api/register',
     [
         check('name', 'Please enter your name').not().isEmpty(),
         check('email', 'Please enter a valid email').isEmail(),
@@ -67,9 +126,7 @@ app.post(
                 //Save to the db and return
                 await user.save();
 
-                res.status(201);
-                res.send('User registered');
-
+                returnToken(user, res);
             }
             catch (err) {
                 res.status(500);
