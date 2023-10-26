@@ -66,7 +66,7 @@ const Login = ({authenticateUser}) => {
                     placeholder="Email"
                     name="email"
                     value={email}
-                    onChange={e => onchange(e)}/>  
+                    onChange={e => onChange(e)}/>  
             </div>
             <div>
                 <input 
@@ -74,7 +74,7 @@ const Login = ({authenticateUser}) => {
                     placeholder="Password"
                     name="password"
                     value={password}
-                    onChange={e => onchange(e)}/>  
+                    onChange={e => onChange(e)}/>  
             </div>
             <div>
                 <button onClick={() => loginUser()}>Log In</button>
