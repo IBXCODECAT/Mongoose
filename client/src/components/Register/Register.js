@@ -9,7 +9,7 @@ const Register = () => {
         passwordConfirm: ''
     });
 
-    const { name, email, password, passwordConfirm} = userData;
+    const { name, email, password, passwordConfirm } = userData;
 
     const onChange = e => {
         const { name, value } = e.target;
@@ -19,7 +19,7 @@ const Register = () => {
         })
     }
 
-    const register = async () => {
+    const registerUser = async () => {
         if (password !== passwordConfirm) {
             console.log('Passwords do not match');
         }
@@ -31,24 +31,43 @@ const Register = () => {
             }
 
             try {
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json'
+                const config = {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
                 }
-            }
-            const body = JSON.stringify(newUser);
-            const res = await axios.post('http://localhost:5000/api/users', body, config);
-            console.log(res.data);
+                const body = JSON.stringify(newUser);
+                const res = await axios.post('http://localhost:5000/api/users', body, config);
+
+                localStorage.setItem('token', res.data.token);
+                history.push('/');
+
+                console.log(res.data);
+
             } catch (error) {
-                console.error(error.response.data);
-                return;
+
+                localStorage.removeItem('token');
+
+                setErrorData({
+                    ...errors,
+                    errors: error.response.data.errors
+                })
+
+                authenticateUser();
             }
         }
     }
 
     return (
         <div>
-            <h2>Register</h2>
+            <div>
+                <button onClick={() => registerUser()}>Register</button>
+            </div>
+            <div>
+                {errors && errors.map(error =>
+                    <div key={error.msg}>{error.msg}</div>    
+                )}
+            </div>
             <div>
                 <input
                     type="text"
@@ -89,7 +108,7 @@ const Register = () => {
                 </input>
             </div>
             <div>
-                <button onClick={() => register()}>Register</button>
+                <button onClick={() => registerUser()}>Register</button>
             </div>
         </div>
     )
