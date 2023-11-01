@@ -4,7 +4,8 @@ import { check, validationResult } from 'express-validator';
 import cors from 'cors';
 import bcrypt from 'bcrypt';
 import auth from './middleware/auth';
-import User from './models/User';
+import User from './models/user';
+import Post from './models/post';
 import jwt from 'jwt';
 
 //Initialize Express Application
@@ -137,5 +138,58 @@ app.post(
     }
 );
 
+
+app.get(
+    '/api/posts',
+    auth,
+    async (req, res) => { 
+        try {
+            const posts = await Post.find().sort({ date: -1 });
+            res.json(posts);
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Server Error');
+        }
+    }
+)
+
+/**
+ * @route POST api/posts
+ * @description Create a new post
+ */
+app.post(
+    'api/posts',
+    [
+        auth,
+        [
+            check('title', 'Title text is required').not().isEmpty(),
+            check('body', 'Body text is required').not().isEmpty()
+        ],
+    ],
+    async (req, res) => {
+        const errors = validationResult(req);
+
+        if(!errors.isEmpty()) {
+            res.status(400).json({errors: errors.array()});
+        } else {
+            const {title, body} = req.body;
+            try {
+                const user = await User.findById(req.user.id);
+
+                const post = new Post({
+                    user: user.id,
+                    title: title,
+                    body: body,
+                });
+
+                await post.save();
+
+            } catch(error) {
+                console.error(error);
+                res.status(500).send('Server Error');
+            }
+        }
+    }
+)
 //Connection Listener
 app.listen(port, () => console.log(`Express server running on port ${port}`));
