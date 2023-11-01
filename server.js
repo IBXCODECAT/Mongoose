@@ -138,7 +138,10 @@ app.post(
     }
 );
 
-
+/**
+ * @route GET api/posts
+ * @description Get all posts
+ */
 app.get(
     '/api/posts',
     auth,
@@ -146,6 +149,27 @@ app.get(
         try {
             const posts = await Post.find().sort({ date: -1 });
             res.json(posts);
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Server Error');
+        }
+    }
+)
+
+/**
+ * @route GET api/posts:id
+ * @description Get post by id
+ */
+app.get(
+    'api/posts:id',
+    auth,
+    async (req, res) => {
+        try {
+            const post = await Post.findById(req.params.id);
+            if(!post) {
+                return res.status(404).json({msg: 'Post not found'});
+            }
+            res.json(post);
         } catch (error) {
             console.error(error);
             res.status(500).send('Server Error');
@@ -188,6 +212,35 @@ app.post(
                 console.error(error);
                 res.status(500).send('Server Error');
             }
+        }
+    }
+)
+
+/**
+ * @route DELETE api/posts:id
+ * @description Update a post
+ */
+app.delete(
+    'api/posts:id',
+    auth,
+    async (req, res) => {
+        try {
+            const post = await Post.findById(req.params.id);
+
+            if(!post) {
+                return res.status(404).json({msg: 'Post not found'});
+            }
+
+            if(post.user.toString() !== req.user.id) {
+                return res.status(401).json({msg: 'User not authorized'});
+            }
+
+            await post.remove();
+
+            res.json('Post removed');
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Server Error');
         }
     }
 )
