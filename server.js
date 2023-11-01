@@ -216,6 +216,36 @@ app.post(
     }
 )
 
+app.put(
+    'api/posts:id',
+    auth,
+    async (req, res) => {
+        try {
+            const {title, body} = req.body;
+            const Post = await Post.findById(req.params.id);
+
+            if(!post) {
+                return res.status(404).json({msg: 'Post not found'});
+            }
+
+            if(post.user.toString() !== req.user.id) {
+                return res.status(401).json({msg: 'User not authorized'});
+            }
+
+            post.title = title || post.title;
+            post.body = body || post.body;
+
+            await post.save();
+
+            res.json(post);
+
+        } catch (error) {
+            console.error(error);
+            res.status(500).send('Server Error');
+        }
+    }
+)
+
 /**
  * @route DELETE api/posts:id
  * @description Update a post
